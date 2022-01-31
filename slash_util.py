@@ -565,7 +565,7 @@ class SlashCommand(Command[CogT]):
 
                     if not all(issubclass(k, discord.abc.GuildChannel) for k in args):
                         raise TypeError(
-                            f"Union parameter types only supported on *Channel types"
+                            "Union parameter types only supported on *Channel types"
                         )
 
                     if len(args) != 3:
