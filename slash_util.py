@@ -4,7 +4,10 @@ import traceback
 import sys
 from collections import defaultdict
 
-import discord, discord.channel, discord.http, discord.state
+import discord
+import discord.channel
+import discord.http
+import discord.state
 from discord.ext import commands
 from discord.utils import MISSING
 
