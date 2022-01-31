@@ -592,7 +592,7 @@ class ContextMenuCommand(Command[CogT]):
 
     def __init__(self, func: CtxMnT, **kwargs):
         self.func = func
-        self.guild_id: int | None = kwargs.get("guild_id", None)
+        self.guild_id: int | None = kwargs.get("guild_id")
         self.name: str = kwargs.get("name", func.__name__)
 
     def _build_command_payload(self):
