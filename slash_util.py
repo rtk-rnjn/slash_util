@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     MsgCmdT = Callable[[CogT, CtxT, discord.Message], Awaitable[Any]]
     UsrCmdT = Callable[[CogT, CtxT, discord.Member], Awaitable[Any]]
     CtxMnT = Union[MsgCmdT, UsrCmdT]
-    
+
     RngT = TypeVar("RngT", bound='Range')
 
 command_type_map: dict[type[Any], int] = {
@@ -74,7 +74,7 @@ def describe(**kwargs):
 def slash_command(**kwargs) -> Callable[[CmdT], SlashCommand]:
     """
     Defines a function as a slash-type application command.
-    
+
     Parameters:
     - name: ``str``
     - - The display name of the command. If unspecified, will use the functions name.
@@ -86,11 +86,11 @@ def slash_command(**kwargs) -> Callable[[CmdT], SlashCommand]:
     def _inner(func: CmdT) -> SlashCommand:
         return SlashCommand(func, **kwargs)
     return _inner
-    
+
 def message_command(**kwargs) -> Callable[[MsgCmdT], MessageCommand]:
     """
     Defines a function as a message-type application command.
-    
+
     Parameters:
     - name: ``str``
     - - The display name of the command. If unspecified, will use the functions name.
@@ -104,7 +104,7 @@ def message_command(**kwargs) -> Callable[[MsgCmdT], MessageCommand]:
 def user_command(**kwargs) -> Callable[[UsrCmdT], UserCommand]:
     """
     Defines a function as a user-type application command.
-    
+
     Parameters:
     - name: ``str``
     - - The display name of the command. If unspecified, will use the functions name.
@@ -147,7 +147,7 @@ class Bot(commands.Bot):
     application_id: int  # hack to avoid linting errors on http methods
     async def start(self, token: str, *, reconnect: bool = True) -> None:
         await self.login(token)
-        
+
         app_info = await self.application_info()
         self._connection.application_id = app_info.id
 
@@ -178,7 +178,7 @@ class Bot(commands.Bot):
     async def delete_all_commands(self, guild_id: int | None = None):
         """
         Deletes all commands on the specified guild, or all global commands if no guild id was given.
-        
+
         Parameters:
         - guild_id: ``Optional[str]``
         - - The guild ID to delete from, or ``None`` to delete global commands.
@@ -191,7 +191,7 @@ class Bot(commands.Bot):
     async def delete_command(self, id: int, *, guild_id: int | None = None):
         """
         Deletes a command with the specified ID. The ID is a snowflake, not the name of the command.
-        
+
         Parameters:
         - id: ``int``
         - - The ID of the command to delete.
@@ -215,7 +215,7 @@ class Bot(commands.Bot):
         for cog in self.cogs.values():
             if not isinstance(cog, ApplicationCog):
                 continue
-                
+
             if not hasattr(cog, "_commands"):
                 cog._commands = {}
 
@@ -236,7 +236,7 @@ class Bot(commands.Bot):
 class Context(Generic[BotT, CogT]):
     """
     The command interaction context.
-    
+
     Attributes
     - bot: [``slash_util.Bot``](#class-botcommand_prefix-help_commanddefault-help-command-descriptionnone-options)
     - - Your bot object.
@@ -266,7 +266,7 @@ class Context(Generic[BotT, CogT]):
         Responds to the given interaction. If you have responded already, this will use the follow-up webhook instead.
         Parameters ``embed`` and ``embeds`` cannot be specified together.
         Parameters ``file`` and ``files`` cannot be specified together.
-        
+
         Parameters:
         - content: ``str``
         - - The content of the message to respond with
@@ -318,7 +318,7 @@ class Context(Generic[BotT, CogT]):
         - - This interaction has been responded to before.
         """
         await self.interaction.response.defer(ephemeral=ephemeral)
-    
+
     @property
     def cog(self) -> CogT:
         """The cog this command belongs to."""
@@ -393,7 +393,7 @@ class SlashCommand(Command[CogT]):
             params.pop(0)
         except IndexError:
             raise ValueError("expected argument `self` is missing")
-        
+
         try:
             params.pop(0)
         except IndexError:
@@ -404,7 +404,7 @@ class SlashCommand(Command[CogT]):
     def _build_descriptions(self):
         if not hasattr(self.func, '_param_desc_'):
             return
-        
+
         for k, v in self.func._param_desc_.items():
             if k not in self.parameters:
                 raise TypeError(f"@describe used to describe a non-existant parameter `{k}`")
@@ -450,7 +450,7 @@ class SlashCommand(Command[CogT]):
                 }
                 if param.default is param.empty:
                     option['required'] = True
-                
+
                 if isinstance(ann, Range):
                     option['max_value'] = ann.max
                     option['min_value'] = ann.min
@@ -471,7 +471,7 @@ class SlashCommand(Command[CogT]):
 
                 elif issubclass(ann, discord.abc.GuildChannel):
                     option['channel_types'] = [channel_filter[ann]]
-                
+
                 options.append(option)
             options.sort(key=lambda f: not f.get('required'))
             payload['options'] = options
@@ -523,7 +523,7 @@ def _parse_resolved_data(interaction: discord.Interaction, data, state: discord.
             member_data['user'] = d
             member = discord.Member(data=member_data, guild=interaction.guild, state=state)
             resolved[int(id)] = member
-        
+
     resolved_channels = data.get('channels')
     if resolved_channels:
         for id, d in resolved_channels.items():
@@ -549,14 +549,14 @@ def _parse_resolved_data(interaction: discord.Interaction, data, state: discord.
 class ApplicationCog(commands.Cog, Generic[BotT]):
     """
     The cog that must be used for application commands.
-    
+
     Attributes:
     - bot: [``slash_util.Bot``](#class-botcommand_prefix-help_commanddefault-help-command-descriptionnone-options)
     - - The bot instance."""
     def __init__(self, bot: BotT):
         self.bot: BotT = bot
         self._commands: dict[str, Command]
-    
+
     async def slash_command_error(self, ctx: Context[BotT, Self], error: Exception) -> None:
         print("Error occured in command", ctx.command.name, file=sys.stderr)
         traceback.print_exception(type(error), error, error.__traceback__)
@@ -565,16 +565,16 @@ class ApplicationCog(commands.Cog, Generic[BotT]):
     async def _internal_interaction_handler(self, interaction: discord.Interaction):
         if interaction.type is not discord.InteractionType.application_command:
             return
-            
+
         name = interaction.data['name']  # type: ignore
         command = self._commands.get(name)
-        
+
         if not command:
             return
 
         state = self.bot._connection
         params: dict = command._build_arguments(interaction, state)
-        
+
         ctx = Context(self.bot, command, interaction)
         try:
             await command.invoke(ctx, **params)
