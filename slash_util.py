@@ -626,7 +626,8 @@ def _parse_resolved_data(
     if not data:
         return {}
 
-    assert interaction.guild
+    if not interaction.guild:
+        raise AssertionError
     resolved = {}
 
     resolved_users = data.get("users")
