@@ -150,25 +150,23 @@ def user_command(**kwargs) -> Callable[[UsrCmdT], UserCommand]:
 
 class _RangeMeta(type):
     @overload
-    def __getitem__(cls: type[RngT], max: int) -> type[int]:
+    def __getitem__(self, max: int) -> type[int]:
         ...
 
     @overload
-    def __getitem__(cls: type[RngT], max: tuple[int, int]) -> type[int]:
+    def __getitem__(self, max: tuple[int, int]) -> type[int]:
         ...
 
     @overload
-    def __getitem__(cls: type[RngT], max: float) -> type[float]:
+    def __getitem__(self, max: float) -> type[float]:
         ...
 
     @overload
-    def __getitem__(cls: type[RngT], max: tuple[float, float]) -> type[float]:
+    def __getitem__(self, max: tuple[float, float]) -> type[float]:
         ...
 
-    def __getitem__(cls, max):
-        if isinstance(max, tuple):
-            return cls(*max)
-        return cls(None, max)
+    def __getitem__(self, max):
+        return self(*max) if isinstance(max, tuple) else self(None, max)
 
 
 class Range(metaclass=_RangeMeta):
@@ -215,8 +213,7 @@ class Bot(commands.Bot):
 
         for c in self.cogs.values():
             if isinstance(c, ApplicationCog):
-                c = c._commands.get(name)
-                if c:
+                if c := c._commands.get(name):
                     return c
 
     async def delete_all_commands(self, guild_id: int | None = None):
@@ -274,8 +271,7 @@ class Bot(commands.Bot):
                 body = cmd._build_command_payload()
                 command_payloads[cmd.guild_id].append(body)
 
-        global_commands = command_payloads.pop(None, [])
-        if global_commands:
+        if global_commands := command_payloads.pop(None, []):
             await self.http.bulk_upsert_global_commands(
                 self.application_id, global_commands
             )
@@ -526,8 +522,7 @@ class SlashCommand(Command[CogT]):
 
         payload = {"name": self.name, "description": self.description, "type": 1}
 
-        params = self.parameters
-        if params:
+        if params := self.parameters:
             options = []
             for name, param in params.items():
                 ann = param.annotation
@@ -633,8 +628,7 @@ def _parse_resolved_data(
         raise AssertionError
     resolved = {}
 
-    resolved_users = data.get("users")
-    if resolved_users:
+    if resolved_users := data.get("users"):
         resolved_members = data["members"]
         for id, d in resolved_users.items():
             member_data = resolved_members[id]
@@ -644,22 +638,19 @@ def _parse_resolved_data(
             )
             resolved[int(id)] = member
 
-    resolved_channels = data.get("channels")
-    if resolved_channels:
+    if resolved_channels := data.get("channels"):
         for id, d in resolved_channels.items():
             d["position"] = None
             cls, _ = discord.channel._guild_channel_factory(d["type"])
             channel = cls(state=state, guild=interaction.guild, data=d)
             resolved[int(id)] = channel
 
-    resolved_messages = data.get("messages")
-    if resolved_messages:
+    if resolved_messages := data.get("messages"):
         for id, d in resolved_messages.items():
             msg = discord.Message(state=state, channel=interaction.channel, data=d)  # type: ignore
             resolved[int(id)] = msg
 
-    resolved_roles = data.get("roles")
-    if resolved_roles:
+    if resolved_roles := data.get("roles"):
         for id, d in resolved_roles.items():
             role = discord.Role(guild=interaction.guild, state=state, data=d)
             resolved[int(id)] = role
